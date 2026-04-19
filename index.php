@@ -106,7 +106,7 @@ try {
             </div>
         </div>
 
-        <div id="modal-video" class="modal flex items-center justify-center p-4">
+        <div id="modal-video" class="modal flex items-center justify-center p-4" style="display: none;">
             <div class="bg-white rounded-lg p-2 max-w-3xl w-full relative shadow-2xl border-2 border-gray-300">
                 <button onclick="cerrarModal()" class="absolute -top-10 right-0 text-white text-3xl font-bold hover:text-red-400 transition">&times; Cerrar</button>
                 <div class="aspect-video">
