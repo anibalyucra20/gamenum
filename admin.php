@@ -46,7 +46,7 @@ try {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel Administrativo - MathQuiz</title>
+    <title>Panel Administrativo - Desafío Matemático</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-4 md:p-10">
