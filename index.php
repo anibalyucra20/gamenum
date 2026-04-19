@@ -129,7 +129,7 @@ try {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Atención',
-                        text: 'Por favor, ingresa un nickname para comenzar.',
+                        text: 'Por favor, ingresa un nombre para comenzar.',
                         confirmButtonColor: '#2563eb'
                     });
                     return;
