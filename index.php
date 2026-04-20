@@ -306,6 +306,7 @@ try {
                     document.getElementById('display-puntos').innerText = puntos;
                     Swal.fire({ icon: 'success', title: '¡Excelente!', text: `Respuesta correcta. +${puntosAGanar} punto(s).`, confirmButtonColor: '#059669', timer: 2000, timerProgressBar: true }).then(() => { if (preguntaActual < 5) { preguntaActual++; cargarPregunta(); } else { finalizarJuego(); } });
                 } else {
+                    Swal.fire({ icon: 'error', title: 'Respuesta Incorrecta', text: 'Inténtalo de nuevo o revisa la ayuda.', timer: 2000, confirmButtonColor: '#059669', timerProgressBar: true });
                     mostrarSeccionAyuda();
                 }
             }
