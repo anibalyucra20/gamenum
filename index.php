@@ -26,6 +26,21 @@ try {
                 height: 100%;
                 background: rgba(0, 0, 0, 0.8);
             }
+            .btn-relacionar {
+                transition: all 0.3s ease;
+            }
+            .btn-relacionar.seleccionado {
+                border-color: #2563eb;
+                background-color: #dbeafe;
+                transform: scale(1.05);
+            }
+            .btn-relacionar.completado {
+                background-color: #d1fae5;
+                border-color: #10b981;
+                color: #065f46;
+                cursor: default;
+                pointer-events: none;
+            }
         </style>
     </head>
 
@@ -123,6 +138,11 @@ try {
             let preguntaActualData = null;
             let haFalladoActual = false;
 
+            // Variables para el modo relacionar
+            let itemSeleccionadoIzq = null;
+            let parejasResueltas = 0;
+            let totalParejas = 0;
+
             function empezarJuego() {
                 const nick = document.getElementById('nickname').value.trim();
                 if (!nick) {
@@ -144,6 +164,7 @@ try {
             }
 
             function iniciarCronometro() {
+                if(cronoInterval) clearInterval(cronoInterval);
                 cronoInterval = setInterval(() => {
                     segundos++;
                     let min = Math.floor(segundos / 60);
@@ -169,9 +190,8 @@ try {
                             imgEval.src = "uploads/" + preguntaActualData.imagen_enunciado;
                             imgEval.classList.remove('hidden');
                             txtEval.classList.add('hidden');
-                            txtEval.innerText = preguntaActualData.enunciado || "";
                         } else {
-                            txtEval.innerText = preguntaActualData.enunciado;
+                            txtEval.innerText = preguntaActualData.enunciado || "Instrucción: Relaciona las columnas correctamente.";
                             txtEval.classList.remove('hidden');
                             imgEval.classList.add('hidden');
                         }
@@ -189,14 +209,96 @@ try {
             function renderizarInterfazRespuesta() {
                 const contenedor = document.getElementById('contenedor-respuestas');
                 contenedor.innerHTML = "";
+                itemSeleccionadoIzq = null;
+                parejasResueltas = 0;
 
-                const esMultiple = (preguntaActualData.formato === 'multiple') ||
-                    (preguntaActualData.formato !== 'abierta' && preguntaActualData.opcion_b && preguntaActualData.opcion_b.trim() !== "");
+                if (preguntaActualData.formato === 'relacionar') {
+                    // --- LÓGICA DE RELACIONAR ---
+                    contenedor.classList.remove('grid-cols-1', 'md:grid-cols-2');
+                    
+                    // Extraer y limpiar parejas
+                    let rawData = [
+                        preguntaActualData.respuesta_correcta,
+                        preguntaActualData.opcion_b,
+                        preguntaActualData.opcion_c,
+                        preguntaActualData.opcion_d,
+                        preguntaActualData.opcion_e
+                    ].filter(p => p && p.includes('|'));
 
-                if (esMultiple) {
+                    let pairs = rawData.map(p => {
+                        let parts = p.split('|');
+                        return { izq: parts[0].trim(), der: parts[1].trim() };
+                    });
+
+                    totalParejas = pairs.length;
+
+                    // Crear listas desordenadas
+                    let listaIzq = pairs.map(p => p.izq).sort(() => Math.random() - 0.5);
+                    let listaDer = pairs.map(p => p.der).sort(() => Math.random() - 0.5);
+
+                    let htmlRelacion = `
+                        <div class="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div class="flex flex-col gap-3" id="col-izq"></div>
+                            <div class="flex flex-col gap-3" id="col-der"></div>
+                        </div>
+                    `;
+                    contenedor.innerHTML = htmlRelacion;
+
+                    const divIzq = document.getElementById('col-izq');
+                    const divDer = document.getElementById('col-der');
+
+                    // Dibujar columna izquierda
+                    listaIzq.forEach(texto => {
+                        const btn = document.createElement('button');
+                        btn.innerText = texto;
+                        btn.className = "btn-relacionar p-3 bg-white border-2 border-gray-200 rounded-lg text-sm font-bold shadow-sm hover:border-blue-400";
+                        btn.onclick = (e) => {
+                            document.querySelectorAll('#col-izq button').forEach(b => b.classList.remove('seleccionado'));
+                            btn.classList.add('seleccionado');
+                            itemSeleccionadoIzq = texto;
+                        };
+                        divIzq.appendChild(btn);
+                    });
+
+                    // Dibujar columna derecha
+                    listaDer.forEach(texto => {
+                        const btn = document.createElement('button');
+                        btn.innerText = texto;
+                        btn.className = "btn-relacionar p-3 bg-white border-2 border-gray-200 rounded-lg text-sm font-bold shadow-sm hover:border-blue-400";
+                        btn.onclick = () => {
+                            if (!itemSeleccionadoIzq) {
+                                Swal.fire({ icon: 'info', title: 'Aviso', text: 'Selecciona primero un concepto de la izquierda', timer: 1500 });
+                                return;
+                            }
+
+                            // Verificar si la pareja es correcta
+                            let esCorrecto = pairs.some(p => p.izq === itemSeleccionadoIzq && p.der === texto);
+
+                            if (esCorrecto) {
+                                // Marcar ambos como completados
+                                btn.classList.add('completado');
+                                document.querySelector('#col-izq button.seleccionado').classList.add('completado');
+                                itemSeleccionadoIzq = null;
+                                parejasResueltas++;
+
+                                if (parejasResueltas === totalParejas) {
+                                    validarRespuesta("CORRECTO_RELACIONAR");
+                                }
+                            } else {
+                                // Error
+                                haFalladoActual = true;
+                                Swal.fire({ icon: 'error', title: 'Pareja Incorrecta', text: 'Sigue intentándolo', timer: 1000, showConfirmButton: false });
+                                document.getElementById('formula-texto').innerText = preguntaActualData.formula_ayuda || "Vuelve a analizar los conceptos.";
+                                document.getElementById('seccion-ayuda').classList.remove('hidden');
+                            }
+                        };
+                        divDer.appendChild(btn);
+                    });
+
+                } else if (preguntaActualData.formato === 'multiple' || (preguntaActualData.opcion_b && preguntaActualData.opcion_b.trim() !== "")) {
+                    // --- LÓGICA DE OPCIÓN MÚLTIPLE ---
                     contenedor.classList.add('grid-cols-1', 'md:grid-cols-2');
                     let opciones = [];
-
                     if (preguntaActualData.respuesta_correcta) opciones.push(preguntaActualData.respuesta_correcta);
                     if (preguntaActualData.opcion_b) opciones.push(preguntaActualData.opcion_b);
                     if (preguntaActualData.opcion_c) opciones.push(preguntaActualData.opcion_c);
@@ -213,10 +315,11 @@ try {
                         contenedor.appendChild(btn);
                     });
                 } else {
+                    // --- LÓGICA DE PREGUNTA ABIERTA ---
                     contenedor.classList.remove('grid-cols-1', 'md:grid-cols-2');
                     contenedor.innerHTML = `
                         <div class="flex flex-col gap-4">
-                            <input type="text" id="respuesta-user" autofocus placeholder="Escribe tu respuesta aquí..." 
+                            <input type="text" id="respuesta-user" placeholder="Escribe tu respuesta aquí..." 
                                 class="w-full border-2 p-4 rounded-xl text-xl focus:border-blue-500 outline-none text-center shadow-inner">
                             <button id="btn-verificar" class="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.02]">
                                 VERIFICAR RESULTADO
@@ -234,11 +337,34 @@ try {
                                 if (e.key === 'Enter') validarRespuesta(input.value);
                             };
                         }
-                    }, 50);
+                    }, 100);
                 }
             }
 
             function validarRespuesta(rptaUsuario) {
+                // Caso especial para cuando el juego de relacionar se completa
+                if (rptaUsuario === "CORRECTO_RELACIONAR") {
+                    const puntosAGanar = haFalladoActual ? 1 : 2;
+                    puntos += puntosAGanar;
+                    document.getElementById('display-puntos').innerText = puntos;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Muy bien!',
+                        text: `Has relacionado todas las parejas correctamente. +${puntosAGanar} punto(s).`,
+                        confirmButtonColor: '#059669',
+                        timer: 2000
+                    }).then(() => {
+                        if (preguntaActual < 5) {
+                            preguntaActual++;
+                            cargarPregunta();
+                        } else {
+                            finalizarJuego();
+                        }
+                    });
+                    return;
+                }
+
                 if (!rptaUsuario || rptaUsuario.toString().trim() === "") return;
 
                 const correcta = preguntaActualData.respuesta_correcta.toString().trim().toLowerCase();
@@ -249,11 +375,10 @@ try {
                     puntos += puntosAGanar;
                     document.getElementById('display-puntos').innerText = puntos;
 
-                    // Reemplazo del Alert por SweetAlert2
                     Swal.fire({
                         icon: 'success',
                         title: '¡Excelente!',
-                        text: `Respuesta correcta. Has ganado ${puntosAGanar} punto(s).`,
+                        text: `Respuesta correcta. +${puntosAGanar} punto(s).`,
                         confirmButtonColor: '#059669',
                         timer: 2000,
                         timerProgressBar: true
@@ -265,17 +390,15 @@ try {
                             finalizarJuego();
                         }
                     });
-
                 } else {
                     haFalladoActual = true;
-                    document.getElementById('formula-texto').innerText = preguntaActualData.formula_ayuda || "Revisa el procedimiento e intenta de nuevo.";
+                    document.getElementById('formula-texto').innerText = preguntaActualData.formula_ayuda || "Vuelve a intentarlo.";
 
                     if (preguntaActualData.imagen_ayuda) {
                         const img = document.getElementById('formula-imagen');
                         img.src = "uploads/" + preguntaActualData.imagen_ayuda;
                         document.getElementById('contenedor-imagen-ayuda').classList.remove('hidden');
                     }
-
                     document.getElementById('seccion-ayuda').classList.remove('hidden');
                 }
             }
@@ -283,12 +406,7 @@ try {
             function mostrarVideo() {
                 const videoId = preguntaActualData.url_youtube;
                 if (!videoId) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Tutorial',
-                        text: 'Lo sentimos, no hay un video tutorial disponible para este ejercicio.',
-                        confirmButtonColor: '#2563eb'
-                    });
+                    Swal.fire({ icon: 'info', title: 'Tutorial', text: 'No hay video disponible.' });
                     return;
                 }
                 document.getElementById('iframe-video').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
@@ -303,7 +421,6 @@ try {
             function finalizarJuego() {
                 clearInterval(cronoInterval);
                 const nick = document.getElementById('nickname').value;
-
                 const datos = new FormData();
                 datos.append('nickname', nick);
                 datos.append('puntos', puntos);
@@ -315,7 +432,7 @@ try {
                         Swal.fire({
                             icon: 'success',
                             title: '¡Desafío Completado!',
-                            html: `<p class="text-lg">Felicidades <b>${nick}</b></p><br><p>Puntuación Final: <b>${puntos} puntos</b></p><p>Tiempo: <b>${segundos} segundos</b></p>`,
+                            html: `<b>${nick}</b>, lograste <b>${puntos} puntos</b> en <b>${segundos} segundos</b>.`,
                             confirmButtonColor: '#2563eb',
                             confirmButtonText: 'Ver Ranking'
                         }).then(() => {
@@ -323,7 +440,7 @@ try {
                         });
                     })
                     .catch(err => {
-                        console.error(err);
+                        console.error("Error guardando ranking:", err);
                         location.reload();
                     });
             }

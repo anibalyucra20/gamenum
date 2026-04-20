@@ -55,9 +55,9 @@ try {
             <h1 class="text-3xl font-bold text-gray-800 border-l-4 border-blue-600 pl-4">Gestión de Preguntas</h1>
             <div class="flex gap-2">
                 <?php if($edit_data): ?>
-                    <a href="admin.php" class="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition shadow-md">NUEVA PREGUNTA</a>
+                    <a href="admin.php" class="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition shadow-md font-bold text-sm">NUEVA PREGUNTA</a>
                 <?php endif; ?>
-                <a href="index.php" class="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition shadow-md">← Volver al Juego</a>
+                <a href="index.php" class="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition shadow-md font-bold text-sm">← Volver al Juego</a>
             </div>
         </div>
 
@@ -85,36 +85,38 @@ try {
                             <select name="formato" id="formato" onchange="toggleOpciones()" class="w-full border-2 p-2 rounded-lg focus:border-blue-500 outline-none transition">
                                 <option value="multiple" <?= ($edit_data && $edit_data['formato'] == 'multiple') ? 'selected' : '' ?>>Múltiple</option>
                                 <option value="abierta" <?= ($edit_data && $edit_data['formato'] == 'abierta') ? 'selected' : '' ?>>Abierta</option>
+                                <option value="relacionar" <?= ($edit_data && $edit_data['formato'] == 'relacionar') ? 'selected' : '' ?>>Relacionar</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Enunciado (Texto Opcional)</label>
-                        <textarea name="enunciado" class="w-full border-2 p-2 rounded-lg focus:border-blue-500 outline-none transition" rows="2"><?= $edit_data ? htmlspecialchars($edit_data['enunciado']) : '' ?></textarea>
+                        <textarea name="enunciado" class="w-full border-2 p-2 rounded-lg focus:border-blue-500 outline-none transition" rows="2" placeholder="Instrucciones de la pregunta..."><?= $edit_data ? htmlspecialchars($edit_data['enunciado']) : '' ?></textarea>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase text-blue-600 mb-1">
-                            Imagen del Enunciado (Gráfico/Pregunta)
-                        </label>
+                        <label class="block text-xs font-bold uppercase text-blue-600 mb-1">Imagen del Enunciado</label>
                         <?php if($edit_data && $edit_data['imagen_enunciado']): ?>
-                            <div class="mb-2 p-2 border rounded bg-gray-50">
+                            <div class="mb-2 p-2 border rounded bg-gray-50 text-center">
                                 <img src="uploads/<?= $edit_data['imagen_enunciado'] ?>" class="h-20 mx-auto rounded">
-                                <p class="text-xs text-center text-gray-500 mt-1">Imagen actual</p>
                             </div>
                         <?php endif; ?>
-                        <input type="file" name="imagen_enunciado" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700">
+                        <input type="file" name="imagen_enunciado" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 transition-colors">
                     </div>
 
                     <div id="seccion-respuestas" class="space-y-3 pt-2 border-t">
+                        <p id="hint-relacionar" class="hidden text-[10px] text-blue-500 font-bold bg-blue-50 p-2 rounded">
+                            ⚠️ MODO RELACIONAR: Escribe en cada campo "Concepto | Respuesta". <br>Ejemplo: "2 + 2 | 4"
+                        </p>
+
                         <div>
-                            <label class="block text-xs font-bold uppercase text-green-600 mb-1">Respuesta Correcta</label>
+                            <label id="label-correcta" class="block text-xs font-bold uppercase text-green-600 mb-1">Respuesta Correcta</label>
                             <input type="text" name="respuesta_correcta" value="<?= $edit_data ? htmlspecialchars($edit_data['respuesta_correcta']) : '' ?>" class="w-full border-2 border-green-200 p-2 rounded-lg focus:border-green-500 outline-none transition" required>
                         </div>
                         
                         <div class="opciones-multiples space-y-3" style="<?= ($edit_data && $edit_data['formato'] == 'abierta') ? 'display:none' : '' ?>">
-                            <label class="block text-xs font-bold uppercase text-red-400 mb-1">Opciones Incorrectas</label>
+                            <label id="label-incorrectas" class="block text-xs font-bold uppercase text-red-400 mb-1">Opciones Incorrectas</label>
                             <?php 
                                 $opts = ['b', 'c', 'd', 'e'];
                                 foreach($opts as $opt): 
@@ -126,11 +128,9 @@ try {
                     </div>
 
                     <div class="pt-2 border-t">
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">
-                            Imagen de Ayuda (Fórmula)
-                        </label>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Imagen de Ayuda (Fórmula)</label>
                         <?php if($edit_data && $edit_data['imagen_ayuda']): ?>
-                            <div class="mb-2 p-2 border rounded bg-gray-50">
+                            <div class="mb-2 p-2 border rounded bg-gray-50 text-center">
                                 <img src="uploads/<?= $edit_data['imagen_ayuda'] ?>" class="h-16 mx-auto rounded">
                             </div>
                         <?php endif; ?>
@@ -138,21 +138,21 @@ try {
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pista (Texto)</label>
-                        <input type="text" name="formula_ayuda" value="<?= $edit_data ? htmlspecialchars($edit_data['formula_ayuda']) : '' ?>" class="w-full border-2 p-2 rounded-lg focus:border-blue-500 outline-none">
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pista en texto</label>
+                        <input type="text" name="formula_ayuda" value="<?= $edit_data ? htmlspecialchars($edit_data['formula_ayuda']) : '' ?>" class="w-full border-2 p-2 rounded-lg focus:border-blue-500 outline-none" placeholder="Ej: Es un número natural">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">ID YouTube</label>
-                        <input type="text" name="url_youtube" value="<?= $edit_data ? htmlspecialchars($edit_data['url_youtube']) : '' ?>" class="w-full border-2 p-2 rounded-lg focus:border-blue-500 outline-none">
+                        <input type="text" name="url_youtube" value="<?= $edit_data ? htmlspecialchars($edit_data['url_youtube']) : '' ?>" class="w-full border-2 p-2 rounded-lg focus:border-blue-500 outline-none" placeholder="Ej: 7m9-7iT3u-Y">
                     </div>
 
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition">
-                            <?= $edit_data ? 'ACTUALIZAR' : 'GUARDAR' ?>
+                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition transform hover:-translate-y-0.5">
+                            <?= $edit_data ? 'ACTUALIZAR DATOS' : 'GUARDAR PREGUNTA' ?>
                         </button>
                         <?php if($edit_data): ?>
-                            <a href="admin.php" class="bg-gray-200 text-gray-700 px-4 py-3 rounded-xl font-bold hover:bg-gray-300 transition text-center flex items-center justify-center">X</a>
+                            <a href="admin.php" class="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold hover:bg-gray-300 transition text-center flex items-center justify-center">X</a>
                         <?php endif; ?>
                     </div>
                 </form>
@@ -164,32 +164,39 @@ try {
                         <thead>
                             <tr class="text-gray-400 text-xs uppercase tracking-wider">
                                 <th class="px-4 py-2">Nivel</th>
-                                <th class="px-4 py-2">Enunciado (Texto/Imagen)</th>
+                                <th class="px-4 py-2">Formato</th>
+                                <th class="px-4 py-2">Enunciado</th>
                                 <th class="px-4 py-2 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($preguntas as $p): ?>
-                                <tr class="bg-gray-50 hover:bg-blue-50 transition-colors">
+                                <tr class="bg-gray-50 hover:bg-blue-50 transition-colors shadow-sm">
                                     <td class="px-4 py-3 rounded-l-xl border-y border-l">
-                                        <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">N<?= $p['tipo'] ?></span>
+                                        <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">N<?= $p['tipo'] ?></span>
+                                    </td>
+                                    <td class="px-4 py-3 border-y text-[10px] font-bold uppercase text-gray-500">
+                                        <?= $p['formato'] ?>
                                     </td>
                                     <td class="px-4 py-3 border-y text-sm">
                                         <div class="flex items-center gap-2">
                                             <?php if($p['imagen_enunciado']): ?>
-                                                <img src="uploads/<?= $p['imagen_enunciado'] ?>" class="h-10 w-16 object-contain rounded border bg-white">
+                                                <img src="uploads/<?= $p['imagen_enunciado'] ?>" class="h-10 w-14 object-cover rounded border bg-white shadow-xs">
                                             <?php endif; ?>
-                                            <p class="font-medium text-gray-800 truncate max-w-xs"><?= htmlspecialchars($p['enunciado']) ?></p>
+                                            <p class="font-medium text-gray-800 truncate max-w-[180px]"><?= htmlspecialchars($p['enunciado'] ?: 'Pregunta con imagen') ?></p>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 border-y border-r rounded-r-xl text-center space-x-1">
-                                        <a href="?editar=<?= $p['id'] ?>" class="bg-blue-100 text-blue-600 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition inline-block">✏️</a>
-                                        <a href="?eliminar=<?= $p['id'] ?>" onclick="return confirm('¿Eliminar?')" class="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-600 hover:text-white transition inline-block">🗑️</a>
+                                        <a href="?editar=<?= $p['id'] ?>" class="bg-blue-100 text-blue-600 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition inline-block shadow-sm">✏️</a>
+                                        <a href="?eliminar=<?= $p['id'] ?>" onclick="return confirm('¿Seguro que deseas eliminar esta pregunta?')" class="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-600 hover:text-white transition inline-block shadow-sm">🗑️</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    <?php if(empty($preguntas)): ?>
+                        <p class="text-center text-gray-400 py-10 italic">No hay preguntas registradas todavía.</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -200,13 +207,43 @@ try {
             const formato = document.getElementById('formato').value;
             const seccionMulti = document.querySelector('.opciones-multiples');
             const inputsMulti = document.querySelectorAll('.req-mult');
-            if(seccionMulti) {
-                seccionMulti.style.display = (formato === 'abierta') ? 'none' : 'block';
-                inputsMulti.forEach(i => i.required = (formato === 'multiple'));
+            const labelCorrecta = document.getElementById('label-correcta');
+            const labelIncorrectas = document.getElementById('label-incorrectas');
+            const hintRelacionar = document.getElementById('hint-relacionar');
+
+            // Reset de etiquetas y placeholders
+            labelCorrecta.innerText = "Respuesta Correcta";
+            labelIncorrectas.innerText = "Opciones Incorrectas";
+            hintRelacionar.classList.add('hidden');
+
+            if(formato === 'abierta') {
+                seccionMulti.style.display = 'none';
+                inputsMulti.forEach(i => {
+                    i.required = false;
+                    i.placeholder = "Opción";
+                });
+            } 
+            else if(formato === 'relacionar') {
+                seccionMulti.style.display = 'block';
+                labelCorrecta.innerText = "Pareja 1 (Concepto | Respuesta)";
+                labelIncorrectas.innerText = "Parejas Adicionales";
+                hintRelacionar.classList.remove('hidden');
+                
+                inputsMulti.forEach((i, index) => {
+                    i.required = false; // No todas las parejas son obligatorias
+                    i.placeholder = `Pareja ${index + 2} (Concepto | Respuesta)`;
+                });
+            }
+            else { // Múltiple
+                seccionMulti.style.display = 'block';
+                inputsMulti.forEach(i => {
+                    i.required = true;
+                    i.placeholder = "Opción Incorrecta";
+                });
             }
         }
         window.onload = toggleOpciones;
     </script>
 </body>
 </html>
-<?php } catch (PDOException $e) { die("Error: " . $e->getMessage()); } ?>
+<?php } catch (PDOException $e) { die("Error de conexión: " . $e->getMessage()); } ?>
