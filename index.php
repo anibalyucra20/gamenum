@@ -97,9 +97,9 @@ try {
             <div class="bg-white p-8 rounded-xl shadow-2xl border-t-4 border-blue-500">
                 <div id="pregunta-header" class="text-sm font-bold text-blue-500 mb-2 uppercase tracking-widest text-center">Cargando...</div>
 
-                <div id="contenedor-enunciado" class="mb-8 text-center">
-                    <p id="enunciado-texto" class="text-2xl text-gray-800 font-medium leading-relaxed"></p>
-                    <img id="enunciado-imagen" src="" alt="Gráfico de la pregunta" class="hidden max-w-full h-auto mx-auto rounded border shadow-inner bg-white p-2 mt-4">
+                <div id="contenedor-enunciado" class="mb-8 text-center space-y-4">
+                    <p id="enunciado-texto" class="text-2xl text-gray-800 font-medium leading-relaxed hidden"></p>
+                    <img id="enunciado-imagen" src="" alt="Gráfico de la pregunta" class="hidden max-w-full h-auto mx-auto rounded border shadow-inner bg-white p-2">
                 </div>
 
                 <div id="contenedor-respuestas" class="grid grid-cols-1 gap-4 mb-6 transition-all duration-300">
@@ -186,14 +186,29 @@ try {
                         const txtEval = document.getElementById('enunciado-texto');
                         const imgEval = document.getElementById('enunciado-imagen');
 
+                        // --- LÓGICA DE MOSTRAR ENUNCIADO Y/O IMAGEN ---
+                        
+                        // 1. Manejo del Texto
+                        if (preguntaActualData.enunciado && preguntaActualData.enunciado.trim() !== "") {
+                            txtEval.innerText = preguntaActualData.enunciado;
+                            txtEval.classList.remove('hidden');
+                        } else {
+                            txtEval.classList.add('hidden');
+                        }
+
+                        // 2. Manejo de la Imagen
                         if (preguntaActualData.imagen_enunciado) {
                             imgEval.src = "uploads/" + preguntaActualData.imagen_enunciado;
                             imgEval.classList.remove('hidden');
-                            txtEval.classList.add('hidden');
                         } else {
-                            txtEval.innerText = preguntaActualData.enunciado || "Instrucción: Relaciona las columnas correctamente.";
-                            txtEval.classList.remove('hidden');
                             imgEval.classList.add('hidden');
+                            imgEval.src = "";
+                        }
+
+                        // Si no hay ninguno de los dos (fallback por seguridad)
+                        if (txtEval.classList.contains('hidden') && imgEval.classList.contains('hidden')) {
+                            txtEval.innerText = "Resuelve el siguiente ejercicio:";
+                            txtEval.classList.remove('hidden');
                         }
 
                         document.getElementById('seccion-ayuda').classList.add('hidden');
@@ -213,10 +228,8 @@ try {
                 parejasResueltas = 0;
 
                 if (preguntaActualData.formato === 'relacionar') {
-                    // --- LÓGICA DE RELACIONAR ---
                     contenedor.classList.remove('grid-cols-1', 'md:grid-cols-2');
                     
-                    // Extraer y limpiar parejas
                     let rawData = [
                         preguntaActualData.respuesta_correcta,
                         preguntaActualData.opcion_b,
@@ -232,7 +245,6 @@ try {
 
                     totalParejas = pairs.length;
 
-                    // Crear listas desordenadas
                     let listaIzq = pairs.map(p => p.izq).sort(() => Math.random() - 0.5);
                     let listaDer = pairs.map(p => p.der).sort(() => Math.random() - 0.5);
 
@@ -247,7 +259,6 @@ try {
                     const divIzq = document.getElementById('col-izq');
                     const divDer = document.getElementById('col-der');
 
-                    // Dibujar columna izquierda
                     listaIzq.forEach(texto => {
                         const btn = document.createElement('button');
                         btn.innerText = texto;
@@ -260,7 +271,6 @@ try {
                         divIzq.appendChild(btn);
                     });
 
-                    // Dibujar columna derecha
                     listaDer.forEach(texto => {
                         const btn = document.createElement('button');
                         btn.innerText = texto;
@@ -270,22 +280,16 @@ try {
                                 Swal.fire({ icon: 'info', title: 'Aviso', text: 'Selecciona primero un concepto de la izquierda', timer: 1500 });
                                 return;
                             }
-
-                            // Verificar si la pareja es correcta
                             let esCorrecto = pairs.some(p => p.izq === itemSeleccionadoIzq && p.der === texto);
-
                             if (esCorrecto) {
-                                // Marcar ambos como completados
                                 btn.classList.add('completado');
                                 document.querySelector('#col-izq button.seleccionado').classList.add('completado');
                                 itemSeleccionadoIzq = null;
                                 parejasResueltas++;
-
                                 if (parejasResueltas === totalParejas) {
                                     validarRespuesta("CORRECTO_RELACIONAR");
                                 }
                             } else {
-                                // Error
                                 haFalladoActual = true;
                                 Swal.fire({ icon: 'error', title: 'Pareja Incorrecta', text: 'Sigue intentándolo', timer: 1000, showConfirmButton: false });
                                 document.getElementById('formula-texto').innerText = preguntaActualData.formula_ayuda || "Vuelve a analizar los conceptos.";
@@ -296,7 +300,6 @@ try {
                     });
 
                 } else if (preguntaActualData.formato === 'multiple' || (preguntaActualData.opcion_b && preguntaActualData.opcion_b.trim() !== "")) {
-                    // --- LÓGICA DE OPCIÓN MÚLTIPLE ---
                     contenedor.classList.add('grid-cols-1', 'md:grid-cols-2');
                     let opciones = [];
                     if (preguntaActualData.respuesta_correcta) opciones.push(preguntaActualData.respuesta_correcta);
@@ -315,18 +318,16 @@ try {
                         contenedor.appendChild(btn);
                     });
                 } else {
-                    // --- LÓGICA DE PREGUNTA ABIERTA ---
                     contenedor.classList.remove('grid-cols-1', 'md:grid-cols-2');
                     contenedor.innerHTML = `
                         <div class="flex flex-col gap-4">
-                            <input type="text" id="respuesta-user" placeholder="Escribe tu respuesta aquí..." 
+                            <input type="text" id="respuesta-user" autofocus placeholder="Escribe tu respuesta aquí..." 
                                 class="w-full border-2 p-4 rounded-xl text-xl focus:border-blue-500 outline-none text-center shadow-inner">
                             <button id="btn-verificar" class="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.02]">
                                 VERIFICAR RESULTADO
                             </button>
                         </div>
                     `;
-
                     setTimeout(() => {
                         const input = document.getElementById('respuesta-user');
                         const btn = document.getElementById('btn-verificar');
@@ -342,12 +343,10 @@ try {
             }
 
             function validarRespuesta(rptaUsuario) {
-                // Caso especial para cuando el juego de relacionar se completa
                 if (rptaUsuario === "CORRECTO_RELACIONAR") {
                     const puntosAGanar = haFalladoActual ? 1 : 2;
                     puntos += puntosAGanar;
                     document.getElementById('display-puntos').innerText = puntos;
-
                     Swal.fire({
                         icon: 'success',
                         title: '¡Muy bien!',
@@ -374,7 +373,6 @@ try {
                     const puntosAGanar = haFalladoActual ? 1 : 2;
                     puntos += puntosAGanar;
                     document.getElementById('display-puntos').innerText = puntos;
-
                     Swal.fire({
                         icon: 'success',
                         title: '¡Excelente!',
@@ -393,7 +391,6 @@ try {
                 } else {
                     haFalladoActual = true;
                     document.getElementById('formula-texto').innerText = preguntaActualData.formula_ayuda || "Vuelve a intentarlo.";
-
                     if (preguntaActualData.imagen_ayuda) {
                         const img = document.getElementById('formula-imagen');
                         img.src = "uploads/" + preguntaActualData.imagen_ayuda;
