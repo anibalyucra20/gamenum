@@ -12,7 +12,7 @@ try {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Desafío Matemático</title>
+        <title>PI-ratas del cálculo</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <style>
@@ -47,7 +47,7 @@ try {
     <body class="bg-gray-100 min-h-screen font-sans">
 
         <div id="pantalla-inicio" class="container mx-auto max-w-xl py-10 px-4">
-            <h1 class="text-4xl font-bold text-center text-blue-600 mb-8 text-shadow">Desafío Matemático</h1>
+            <h1 class="text-4xl font-bold text-center text-blue-600 mb-8 text-shadow">PI-ratas del cálculo</h1>
 
             <div class="bg-white p-6 rounded-lg shadow-lg mb-8 border-b-4 border-blue-500">
                 <input type="text" id="nickname" placeholder="Tu Nombre" class="w-full border p-3 rounded mb-4 focus:ring-2 focus:ring-blue-400 outline-none transition-all">
