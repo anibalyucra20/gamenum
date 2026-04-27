@@ -110,9 +110,11 @@ try {
                         <span>❌</span> ¡Respuesta Incorrecta!
                     </p>
                     <p id="formula-texto" class="text-gray-700 italic mb-4"></p>
-                    <button onclick="mostrarVideo()" class="w-full bg-red-600 text-white px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-red-700 transition font-bold shadow-md mb-4">
+                    
+                    <button id="btn-tutorial" onclick="mostrarVideo()" class="w-full bg-red-600 text-white px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-red-700 transition font-bold shadow-md mb-4">
                         Ver Tutorial en YouTube 🎥
                     </button>
+
                     <div id="contenedor-imagen-ayuda" class="hidden bg-white p-2 rounded border shadow-inner">
                         <p class="text-xs text-gray-400 mb-1 font-bold">RECURSO VISUAL:</p>
                         <img id="formula-imagen" src="" alt="Imagen de ayuda" class="max-w-full h-auto mx-auto rounded">
@@ -177,7 +179,6 @@ try {
                         const txtEval = document.getElementById('enunciado-texto');
                         const imgEval = document.getElementById('enunciado-imagen');
 
-                        // Mostrar Texto e Imagen si existen
                         if (preguntaActualData.enunciado && preguntaActualData.enunciado.trim() !== "") {
                             txtEval.innerText = preguntaActualData.enunciado;
                             txtEval.classList.remove('hidden');
@@ -266,17 +267,23 @@ try {
                 }
             }
 
-            // Función centralizada para mostrar la ayuda (Imagen y Texto)
             function mostrarSeccionAyuda() {
                 haFalladoActual = true;
                 const textoAyuda = document.getElementById('formula-texto');
                 const imgAyuda = document.getElementById('formula-imagen');
                 const contImgAyuda = document.getElementById('contenedor-imagen-ayuda');
                 const seccionAyuda = document.getElementById('seccion-ayuda');
+                const btnYoutube = document.getElementById('btn-tutorial');
 
                 textoAyuda.innerText = preguntaActualData.formula_ayuda || "Revisa el procedimiento e intenta de nuevo.";
                 
-                // Verificamos que el campo no sea null ni esté vacío
+                // Lógica corregida para el botón de YouTube
+                if (preguntaActualData.url_youtube && preguntaActualData.url_youtube.trim() !== "") {
+                    btnYoutube.classList.remove('hidden');
+                } else {
+                    btnYoutube.classList.add('hidden');
+                }
+
                 if (preguntaActualData.imagen_ayuda && preguntaActualData.imagen_ayuda.trim() !== "") {
                     imgAyuda.src = "uploads/" + preguntaActualData.imagen_ayuda;
                     contImgAyuda.classList.remove('hidden');
